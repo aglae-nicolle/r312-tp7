@@ -10,15 +10,13 @@ const clean = penguins.filter(
 ---
 
 <Layout>
-  <h1 class="text-3xl font-bold p-4">Manchots de Palmer</h1>
+  <h1 class="text-3xl font-bold p-4">Penguins</h1>
 
   <figure class="p-4">
     <PlotFigure
       options={{
         title: "Longueur vs profondeur du bec",
         subtitle: "Trois espèces de l’archipel Palmer",
-        caption:
-          "Figure 1. Points colorés par espèce. Les valeurs manquantes sont exclues.",
         ariaLabel:
           "Nuage de points longueur du bec en abscisse, profondeur en ordonnée, couleur = espèce",
         color: { legend: true },
@@ -32,16 +30,12 @@ const clean = penguins.filter(
         ],
       }}
     />
-    <figcaption class="text-sm text-gray-600 mt-2">
-      Figure 1. Longueur et profondeur du bec par espèce.
-    </figcaption>
   </figure>
 
   <figure class="p-4">
     <PlotFigure
       options={{
         title: "Effectifs par espèce",
-        caption: "Figure 2. Nombre d’individus observés.",
         ariaLabel: "Diagramme en barres du nombre de manchots par espèce",
         marks: [
           Plot.barY(
@@ -52,6 +46,5 @@ const clean = penguins.filter(
         ],
       }}
     />
-    <figcaption>Figure 2. Répartition par espèce.</figcaption>
   </figure>
 </Layout>
