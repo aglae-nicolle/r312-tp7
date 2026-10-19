@@ -1,26 +1,231 @@
 ---
-import "../styles/global.css";
+import Layout from "../layouts/Layout.astro";
+import penguins from "../assets/penguins.json";
+
+// Préparer les listes uniques côté serveur (pour les <option>)
+const speciesList = [
+  ...new Set(penguins.map((d) => d.species).filter(Boolean)),
+].sort();
+const islandList = [
+  ...new Set(penguins.map((d) => d.island).filter(Boolean)),
+].sort();
+const sexList = [...new Set(penguins.map((d) => d.sex).filter(Boolean))].sort();
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Astro Basics</title>
-  </head>
-  <body>
-    <slot />
-  </body>
-</html>
+<Layout title="Filtres clients — Penguins Plot">
+  <main class="min-h-screen bg-slate-950 text-slate-100">
+    <header
+      class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-10"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4"
+      >
+        <div class="flex items-center gap-3">
+          <span class="text-3xl" aria-hidden="true">📊</span>
+          <div>
+            <h1 class="text-xl font-semibold tracking-tight">
+              Plot + SELECT (côté client)
+            </h1>
+            <p class="text-sm text-slate-400">
+              Filtrage dynamique Espèce / Île / Sexe
+            </p>
+          </div>
+        </div>
+        <nav class="flex gap-2 text-sm" aria-label="Navigation principale">
+          <a
+            href="/"
+            class="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-300 transition"
+            >Accueil</a
+          >
+          <a
+            href="/leaflet"
+            class="px-3 py-1.5 rounded-full hover:bg-slate-800 text-slate-300 transition"
+            >Carte Leaflet</a
+          >
+          <a
+            href="/geojson"
+            class="px-3 py-1.5 rounded-full bg-cyan-500/20 text-cyan-300 font-medium"
+            aria-current="page">GeoJSON / Plot</a
+          >
+        </nav>
+      </div>
+    </header>
 
-<style>
-  html,
-  body {
-    margin: 0;
-    width: 100%;
-    height: 100%;
+    <div class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+      <p class="text-slate-300 max-w-3xl">
+        Les listes de valeurs sont générées <strong>côté serveur</strong> (Astro).
+        Le filtrage et le redessinage du graphique se font <strong
+          >côté client</strong
+        >
+        (comme demandé pour Year / Sex / Age dans le TP population).
+      </p>
+
+      <!-- SELECT générés côté serveur -->
+      <form
+        id="filters"
+        class="flex flex-wrap gap-4 items-end"
+        aria-label="Filtres du graphique"
+      >
+        <div class="flex flex-col gap-1">
+          <label
+            for="species"
+            class="text-xs uppercase tracking-wider text-slate-400"
+            >Espèce</label
+          >
+          <select
+            id="species"
+            class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          >
+            <option value="">Toutes</option>
+            {speciesList.map((s) => <option value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label
+            for="island"
+            class="text-xs uppercase tracking-wider text-slate-400">Île</label
+          >
+          <select
+            id="island"
+            class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          >
+            <option value="">Toutes</option>
+            {islandList.map((i) => <option value={i}>{i}</option>)}
+          </select>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label
+            for="sex"
+            class="text-xs uppercase tracking-wider text-slate-400">Sexe</label
+          >
+          <select
+            id="sex"
+            class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          >
+            <option value="">Tous</option>
+            {
+              sexList.map((s) => (
+                <option value={s}>
+                  {s === "MALE" ? "Mâle" : s === "FEMALE" ? "Femelle" : s}
+                </option>
+              ))
+            }
+          </select>
+        </div>
+        <button
+          type="button"
+          id="reset"
+          class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm transition border border-slate-700"
+        >
+          Réinitialiser
+        </button>
+      </form>
+
+      <p id="count" class="text-sm text-cyan-400" aria-live="polite">
+        Chargement…
+      </p>
+
+      <!-- Conteneur du graphique (rempli côté client) -->
+      <figure
+        id="plot-container"
+        class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl min-h-[480px]"
+        aria-label="Graphique filtré des manchots"
+      >
+        <p class="text-slate-500 text-center py-20">Chargement du graphique…</p>
+      </figure>
+
+      <aside
+        class="text-sm text-slate-400 border-l-4 border-cyan-500/50 pl-4"
+        role="note"
+      >
+        <p>
+          <strong class="text-slate-200">TP GeoJSON / SELECT :</strong>
+          Même pattern que pour populationMain (Year, Sex, Age) : listes uniques calculées
+          en frontmatter Astro → &lt;select&gt; → écouteurs côté client → re-render
+          Plot.
+        </p>
+      </aside>
+    </div>
+  </main>
+</Layout>
+
+<!-- Observable Plot via CDN pour le côté client -->
+<script is:inline src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"
+></script>
+
+<script define:vars={{ penguins }}>
+  // Données injectées depuis le serveur
+  const allData = penguins.filter(
+    (d) => d.culmen_length_mm != null && d.culmen_depth_mm != null,
+  );
+
+  const elmSpecies = document.getElementById("species");
+  const elmIsland = document.getElementById("island");
+  const elmSex = document.getElementById("sex");
+  const elmReset = document.getElementById("reset");
+  const elmCount = document.getElementById("count");
+  const container = document.getElementById("plot-container");
+
+  function getFiltered() {
+    const sp = elmSpecies.value;
+    const is = elmIsland.value;
+    const sx = elmSex.value;
+    return allData.filter((d) => {
+      if (sp && d.species !== sp) return false;
+      if (is && d.island !== is) return false;
+      if (sx && d.sex !== sx) return false;
+      return true;
+    });
   }
-</style>
+
+  function render() {
+    const data = getFiltered();
+    elmCount.textContent = `${data.length} manchot${data.length > 1 ? "s" : ""} affiché${data.length > 1 ? "s" : ""}`;
+
+    // Vider et redessiner
+    container.innerHTML = "";
+    const plot = Plot.plot({
+      title: "Longueur vs profondeur du bec (filtré)",
+      subtitle: "Filtres appliqués dynamiquement côté client",
+      caption: `Figure. ${data.length} observations après filtrage.`,
+      ariaLabel:
+        "Nuage de points filtré longueur et profondeur du bec par espèce",
+      grid: true,
+      color: { legend: true, label: "Espèce" },
+      x: { label: "Longueur du bec (mm) →" },
+      y: { label: "↑ Profondeur du bec (mm)" },
+      marks: [
+        Plot.frame({ stroke: "#334155" }),
+        Plot.dot(data, {
+          x: "culmen_length_mm",
+          y: "culmen_depth_mm",
+          stroke: "species",
+          tip: true,
+        }),
+      ],
+      width: Math.min(720, container.clientWidth - 32),
+      height: 420,
+      style: {
+        background: "transparent",
+        color: "#e2e8f0",
+        fontFamily: "system-ui, sans-serif",
+      },
+    });
+    container.append(plot);
+  }
+
+  // Écouteurs
+  [elmSpecies, elmIsland, elmSex].forEach((el) => {
+    el.addEventListener("change", render);
+  });
+  elmReset.addEventListener("click", () => {
+    elmSpecies.value = "";
+    elmIsland.value = "";
+    elmSex.value = "";
+    render();
+  });
+
+  // Premier rendu
+  render();
+</script>

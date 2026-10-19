@@ -1,0 +1,18 @@
+---
+import MainLayout from "../layouts/Layout.astro";
+import PlotChart from "../components/PlotChart.astro";
+import FilterControls from "../components/FilterControls.astro";
+import penguins from "../assets/penguins.json";
+---
+
+<MainLayout title="Penguin Data Charts">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6">Penguin Data Visualization</h1>
+
+        <FilterControls client:load />
+
+        <div class="mt-8">
+            <PlotChart client:load />
+        </div>
+    </div>
+</MainLayout>
