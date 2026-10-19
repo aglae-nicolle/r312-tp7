@@ -1,0 +1,76 @@
+---
+import Layout from "../layouts/Layout.astro";
+import penguins from "../assets/penguins.json";
+
+const species = [...new Set(penguins.map((d) => d.species))].sort();
+const islands = [...new Set(penguins.map((d) => d.island))].sort();
+const sexes = [...new Set(penguins.map((d) => d.sex).filter(Boolean))].sort();
+---
+
+<Layout>
+    <h1 class="text-2xl p-4">Exploration interactive</h1>
+    <div class="flex flex-wrap gap-4 p-4">
+        <label
+            >Espèce
+            <select id="species" class="border p-1 ml-1">
+                <option value="">Toutes</option>
+                {species.map((s) => <option value={s}>{s}</option>)}
+            </select>
+        </label>
+        <label
+            >Île
+            <select id="island" class="border p-1 ml-1">
+                <option value="">Toutes</option>
+                {islands.map((s) => <option value={s}>{s}</option>)}
+            </select>
+        </label>
+        <label
+            >Sexe
+            <select id="sex" class="border p-1 ml-1">
+                <option value="">Tous</option>
+                {sexes.map((s) => <option value={s}>{s}</option>)}
+            </select>
+        </label>
+    </div>
+    <div id="chart" class="p-4"></div>
+</Layout>
+
+<script>
+    import * as Plot from "@observablehq/plot";
+    import penguins from "../assets/penguins.json";
+
+    const elSpecies = document.getElementById("species") as HTMLSelectElement;
+    const elIsland = document.getElementById("island") as HTMLSelectElement;
+    const elSex = document.getElementById("sex") as HTMLSelectElement;
+    const chart = document.getElementById("chart")!;
+
+    function render() {
+        const data = penguins.filter(
+            (d) =>
+                d.culmen_length_mm != null &&
+                (!elSpecies.value || d.species === elSpecies.value) &&
+                (!elIsland.value || d.island === elIsland.value) &&
+                (!elSex.value || d.sex === elSex.value),
+        );
+        const plot = Plot.plot({
+            title: "Bec filtré",
+            caption: `${data.length} individus`,
+            ariaLabel: "Nuage de points filtré par espèce, île et sexe",
+            color: { legend: true },
+            grid: true,
+            marks: [
+                Plot.dot(data, {
+                    x: "culmen_length_mm",
+                    y: "culmen_depth_mm",
+                    stroke: "species",
+                }),
+            ],
+        });
+        chart.replaceChildren(plot);
+    }
+
+    [elSpecies, elIsland, elSex].forEach((el) =>
+        el.addEventListener("change", render),
+    );
+    render();
+</script>
